@@ -1,6 +1,10 @@
 import { Context } from 'telegraf';
 
-export interface ISessionData {}
+export interface ISessionData {
+    isAddLinkInputActive: boolean;
+    isRemoveLinkInputActive: boolean;
+    addedLinks: string[];
+}
 
 export interface IBotContext extends Context {
   session: ISessionData;

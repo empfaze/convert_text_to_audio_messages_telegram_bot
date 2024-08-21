@@ -5,6 +5,7 @@ import { IBotContext } from '../types/context';
 import { Command } from '../commands/command';
 import { StartCommand } from '../commands/start';
 import { ActionCommand } from '../commands/action';
+import LocalSession from 'telegraf-session-local';
 
 export class BotService {
   private bot: Telegraf<IBotContext>;
@@ -12,7 +13,7 @@ export class BotService {
 
   constructor(private readonly configService: IConfigService) {
     this.bot = new Telegraf<IBotContext>(this.configService.get(TOKEN));
-    this.bot.use(session());
+    this.bot.use(new LocalSession({ database: 'local_session.json' }).middleware());
   }
 
   init() {
