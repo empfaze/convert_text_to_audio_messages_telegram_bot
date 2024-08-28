@@ -13,7 +13,9 @@ export class BotService {
 
   constructor(private readonly configService: IConfigService) {
     this.bot = new Telegraf<IBotContext>(this.configService.get(TOKEN));
-    this.bot.use(new LocalSession({ database: 'local_session.json' }).middleware());
+    this.bot.use(
+      new LocalSession({ database: 'local_session.json' }).middleware(),
+    );
   }
 
   init() {

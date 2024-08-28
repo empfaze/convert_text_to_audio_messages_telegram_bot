@@ -10,11 +10,11 @@ export class StartCommand extends Command {
 
   handleCommand(): void {
     this.bot.command(START_COMMAND, (context) => {
-        const userName = context.update.message.from.first_name;
+      const userName = context.update.message.from.first_name;
 
-        context.reply(
-            `Добрый день, ${userName}. Для взаимодействия с ботом используйте команду "/action". Она выводит дополнительные опции, с помощью которых вы сможете добавлять и удалять сообщества, а также выводить список добавленных на данный момент сообществ`,
-        );
+      context.reply(
+        `Добрый день, ${userName}. Для взаимодействия с ботом используйте команду "/action". Она выводит дополнительные опции, с помощью которых вы сможете добавлять и удалять сообщества, а также выводить список добавленных на данный момент сообществ`,
+      );
     });
   }
 }
