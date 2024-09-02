@@ -1,8 +1,9 @@
 import { Markup, Telegraf } from 'telegraf';
 import { Command } from './command';
 import { IBotContext } from '../types/context';
-import { ACTION_COMMAND, NEW_LINE_SYMBOL } from '../constants/common';
+import { ACTION_COMMAND, DEFAULT_VOICE_OPTIONS, NEW_LINE_SYMBOL } from '../constants/common';
 import { mapEnteredLinkToChannelName } from '../helpers/common';
+import * as PlayHT from 'playht';
 
 export class ActionCommand extends Command {
   constructor(bot: Telegraf<IBotContext>) {
@@ -79,6 +80,18 @@ export class ActionCommand extends Command {
 
       const addedChannels = context.session.addedChannels;
       const enteredText = context.text.trim();
+
+      if (!context.session.isAddLinkInputActive && !context.session.isRemoveLinkInputActive) {
+        try {
+          const { audioUrl } = await PlayHT.generate(enteredText, DEFAULT_VOICE_OPTIONS as PlayHT.SpeechOptions);
+
+          context.replyWithAudio(audioUrl, { caption: enteredText });
+        } catch (error) {
+          console.log('An error occured while converting text to audio', error);
+        }
+
+        return;
+      }
 
       const channelName = mapEnteredLinkToChannelName(enteredText);
 
