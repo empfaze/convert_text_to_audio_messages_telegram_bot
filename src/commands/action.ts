@@ -1,9 +1,27 @@
 import { Markup, Telegraf } from 'telegraf';
 import { Command } from './command';
 import { IBotContext } from '../types/context';
-import { ACTION_COMMAND, DEFAULT_VOICE_OPTIONS, NEW_LINE_SYMBOL } from '../constants/common';
+import {
+  ACTION_COMMAND,
+  DEFAULT_VOICE_OPTIONS,
+  NEW_LINE_SYMBOL,
+} from '../constants/common';
 import { mapEnteredLinkToChannelName } from '../helpers/common';
 import * as PlayHT from 'playht';
+import {
+  ADD_COMMUNITY_MESSAGE,
+  CHOOSE_ACTION_MESSAGE,
+  COMMUNITY_IS_ADDED_MESSAGE,
+  COMMUNITY_IS_ALREADY_ADDED_MESSAGE,
+  COMMUNITY_IS_REMOVED_MESSAGE,
+  DELETE_COMMUNITY_MESSAGE,
+  ENTERED_COMMUNITY_IS_NOT_ADDED_MESSAGE,
+  ENTER_CORRECT_COMMUNITY_NAME_MESSAGE,
+  ENTER_LINK_TO_ADD_COMMUNITY_MESSAGE,
+  ENTER_LINK_TO_REMOVE_COMMUNITY_MESSAGE,
+  NO_ADDED_COMMUNITIES_MESSAGE,
+  SHOW_COMMUNITIES_MESSAGE,
+} from '../constants/messages';
 
 export class ActionCommand extends Command {
   constructor(bot: Telegraf<IBotContext>) {
@@ -13,18 +31,18 @@ export class ActionCommand extends Command {
   handleCommand(): void {
     this.bot.command(ACTION_COMMAND, (context) => {
       context.reply(
-        'Выберите действие',
+        CHOOSE_ACTION_MESSAGE,
         Markup.inlineKeyboard([
           [
-            Markup.button.callback('Добавить сообщество', 'handle_add_button'),
+            Markup.button.callback(ADD_COMMUNITY_MESSAGE, 'handle_add_button'),
             Markup.button.callback(
-              'Удалить сообщество',
+              DELETE_COMMUNITY_MESSAGE,
               'handle_remove_button',
             ),
           ],
           [
             Markup.button.callback(
-              'Показать сообщества',
+              SHOW_COMMUNITIES_MESSAGE,
               'handle_show_links_button',
             ),
           ],
@@ -33,26 +51,20 @@ export class ActionCommand extends Command {
     });
 
     this.bot.action('handle_add_button', (context) => {
-      context.reply(
-        'Введите ссылку на сообщество для добавления его в отслеживаемые',
-      );
+      context.reply(ENTER_LINK_TO_ADD_COMMUNITY_MESSAGE);
 
       context.session.isAddLinkInputActive = true;
       context.session.isRemoveLinkInputActive = false;
     });
 
     this.bot.action('handle_remove_button', (context) => {
-      const addedChannels = context.session.addedChannels;
-
-      if (!addedChannels.length) {
-        context.reply('У вас нет добавленных сообществ');
+      if (!context.session.addedChannels.length) {
+        context.reply(NO_ADDED_COMMUNITIES_MESSAGE);
 
         return;
       }
 
-      context.reply(
-        'Введите ссылку на сообщество для удаления его из отслеживаемых',
-      );
+      context.reply(ENTER_LINK_TO_REMOVE_COMMUNITY_MESSAGE);
 
       context.session.isRemoveLinkInputActive = true;
       context.session.isAddLinkInputActive = false;
@@ -64,7 +76,7 @@ export class ActionCommand extends Command {
       const stringifiedLinks = transformedChannels.join(NEW_LINE_SYMBOL);
 
       if (!stringifiedLinks.length) {
-        context.reply('У вас нет добавленных сообществ');
+        context.reply(NO_ADDED_COMMUNITIES_MESSAGE);
 
         return;
       }
@@ -81,9 +93,15 @@ export class ActionCommand extends Command {
       const addedChannels = context.session.addedChannels;
       const enteredText = context.text.trim();
 
-      if (!context.session.isAddLinkInputActive && !context.session.isRemoveLinkInputActive) {
+      if (
+        !context.session.isAddLinkInputActive &&
+        !context.session.isRemoveLinkInputActive
+      ) {
         try {
-          const { audioUrl } = await PlayHT.generate(enteredText, DEFAULT_VOICE_OPTIONS as PlayHT.SpeechOptions);
+          const { audioUrl } = await PlayHT.generate(
+            enteredText,
+            DEFAULT_VOICE_OPTIONS as PlayHT.SpeechOptions,
+          );
 
           context.replyWithAudio(audioUrl, { caption: enteredText });
         } catch (error) {
@@ -96,7 +114,7 @@ export class ActionCommand extends Command {
       const channelName = mapEnteredLinkToChannelName(enteredText);
 
       if (!channelName) {
-        context.reply('Введите корректное название канала');
+        context.reply(ENTER_CORRECT_COMMUNITY_NAME_MESSAGE);
 
         return;
       }
@@ -105,17 +123,17 @@ export class ActionCommand extends Command {
         if (addedChannels) {
           if (addedChannels.includes(channelName)) {
             context.reply(
-              'Сообщество уже добавлено в отслеживаемые. Введите ссылку на сообщество для добавления его в отслеживаемые',
+              `${COMMUNITY_IS_ALREADY_ADDED_MESSAGE}. ${ENTER_LINK_TO_ADD_COMMUNITY_MESSAGE}`,
             );
           } else {
             context.session.addedChannels.push(channelName);
-            context.reply('Сообщество было успешно добавлено в отслеживаемые');
+            context.reply(COMMUNITY_IS_ADDED_MESSAGE);
 
             resetSessionState();
           }
         } else {
           context.session.addedChannels = [channelName];
-          context.reply('Сообщество было успешно добавлено в отслеживаемые');
+          context.reply(COMMUNITY_IS_ADDED_MESSAGE);
 
           resetSessionState();
         }
@@ -127,18 +145,18 @@ export class ActionCommand extends Command {
         if (addedChannels) {
           if (!addedChannels.includes(channelName)) {
             context.reply(
-              'Введенное сообщество не находится в отслеживаемых. Введите ссылку на сообщество для удаления его из отслеживаемых',
+              `${ENTERED_COMMUNITY_IS_NOT_ADDED_MESSAGE}. ${ENTER_LINK_TO_REMOVE_COMMUNITY_MESSAGE}`,
             );
           } else {
             context.session.addedChannels = addedChannels.filter(
               (channel) => channel !== channelName,
             );
-            context.reply('Сообщество было успешно удалено из отслеживаемых');
+            context.reply(COMMUNITY_IS_REMOVED_MESSAGE);
 
             resetSessionState();
           }
         } else {
-          context.reply('У вас нет добавленных сообществ');
+          context.reply(NO_ADDED_COMMUNITIES_MESSAGE);
           resetSessionState();
         }
       }

@@ -3,3 +3,4 @@
 package-lock.json
 /dist
 local_session.json
+.api
